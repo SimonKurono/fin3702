@@ -1,0 +1,38 @@
+You are a quantitative finance programmer. Write ONE self-contained Python 3 script
+(runs top-to-bottom in Google Colab with only pip installs at the top) that builds a FORWARD-LOOKING portfolio selection
+model for the year 2025 using macroeconomic variables, using ONLY information available up to 2024-12-31.
+HARD RULE: no data dated after 2024-12-31 may be downloaded, used or tested anywhere. Add asserts for this.
+
+1. ETF DATA
+   Download MONTHLY ADJUSTED CLOSE prices from Yahoo Finance (yfinance) for: SPY, IWM, VEA, VWO, XLE, QQQ, AGG, TIP, HYG, GLD.
+   Download daily data from 2020-11-20 to 2024-12-31 (end='2025-01-01' is exclusive) with auto_adjust=False, take "Adj Close",
+   resample to month-end with the LAST trading day of each month, keep 2020-12-31 to 2024-12-31.
+   Simple monthly returns = P_t / P_(t-1) - 1: exactly 48 observations (Jan 2021 - Dec 2024); assert that.
+2. RISK-FREE RATE
+   Download https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip, use only the monthly
+   table (first field is a 6-digit YYYYMM), take the RF column (PERCENT, divide by 100), index by month-end.
+   Annualised risk-free rate rf = mean of the 48 monthly RF values (Jan 2021 - Dec 2024) x 12.
+3. MACRO DATA (FRED free CSV, no key): https://fred.stlouisfed.org/graph/fredgraph.csv?id=<ID>
+   Series: DGS10, T10Y2Y, VIXCLS (daily -> monthly mean), FEDFUNDS, CPIAUCSL, UNRATE (monthly). "." means missing.
+   Keep only 2019-01-01 to 2024-12-31 and convert all to month-end. Build six features per month t:
+     y10 = DGS10, curve = T10Y2Y, vix = VIXCLS, ffr = FEDFUNDS, cpi_yoy = 100 x (CPIAUCSL_t / CPIAUCSL_(t-12) - 1), unrate = UNRATE.
+   Publication delay: CPI and unemployment for month t are only published in month t+1, so shift cpi_yoy and unrate forward
+   by one extra month (use the value of month t-1 as the month-t feature).
+4. FORECASTING MODEL
+   To predict the return of an ETF in month t use only features known at the end of month t-1 (i.e. lag all six features by one month).
+   Fit, for each ETF, a regularised linear model (standardise the features first; ridge regression with the penalty chosen by
+   leave-one-out cross-validation) from the six lagged features to the ETF's monthly return over Jan 2021 - Dec 2024.
+   Forecast: apply the fitted models to the feature values of Dec 2024 to get a predicted monthly return for each ETF,
+   multiply by 12 to get annualised expected returns mu_fwd for 2025.
+   Print for each ETF: chosen penalty, leave-one-out R-squared, annualised forecast mu_fwd, and the model coefficients.
+5. COVARIANCE: Ledoit-Wolf shrinkage covariance (sklearn.covariance.LedoitWolf) of the 48 monthly returns x 12.
+6. PORTFOLIOS (scipy SLSQP, bounds 0..1, weights sum to 1, NO short selling, at least 10 starting points)
+   - ORP: maximise (w.mu_fwd - rf) / sqrt(w' Sigma w). It must hold at least 2 ETFs with weight > 0.0001, otherwise raise an error
+     saying to choose other ETFs.
+   - OCP with risk aversion A = 7: y = (E[r_ORP] - rf) / (A x variance_ORP); OCP risky weights = y x ORP weights, risk-free weight
+     = 1 - y (negative means borrowing at rf); OCP return = rf + y x (E[r_ORP] - rf); OCP sd = y x sd_ORP; OCP Sharpe = (return - rf) / sd.
+7. OUTPUT
+   Print mu_fwd, the ORP and OCP weights, and the OCP's expected return, sd and Sharpe. Write forward_results.json with
+   {"weights": {ticker: w, ..., "RiskFree": w}, "ret": x, "sd": x, "sharpe": x, "y": x, "mu_fwd": {ticker: x}} (annualised decimals)
+   and an Excel file forward_results.xlsx with a worksheet "Forward OCP" showing the same.
+Return only the code in one block.

@@ -56,3 +56,13 @@ Result (fresh Claude subagent, tools disabled): **PASS on the first attempt.**
 
 Practical note: the script calls `plt.show()`. In Colab this renders inline; run locally on macOS with a GUI backend it blocks until the window is
 closed (it hung our first local run). Run with `MPLBACKEND=Agg` locally. Sheet 3 of the workbook embeds this PNG.
+
+## Prompt C: macroeconomic data download (Step 6a)
+
+### v1
+Text: `prompts/promptC_v1.txt` (six FRED series with the reason each matters; month-end conversion; hard cap at 2024-12-31 with an assert).
+
+Result (fresh Claude subagent, tools disabled): **PASS on the first attempt.** The script ran unmodified and produced a 72-month table
+(Jan 2019 - Dec 2024) that is **identical (max abs diff 0.0 in all six columns)** to the macro table used by the Python reference.
+It enforced the cap twice: server-side (`cosd`/`coed` query parameters, so later data is never downloaded) and with an assert on every series.
+Code: `llm_code/macro_download.py`, output `llm_code/macro_download/macro.csv`.

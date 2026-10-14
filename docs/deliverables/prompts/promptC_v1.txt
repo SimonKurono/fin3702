@@ -1,0 +1,25 @@
+You are a quantitative finance programmer. Write ONE self-contained Python 3 script
+(runs top-to-bottom in Google Colab with only pip installs at the top) that downloads macroeconomic data
+for a portfolio model that will forecast returns of 10 ETFs (US and international equities, bonds, gold) for 2025.
+
+DATA SOURCE: FRED's free CSV endpoint, no API key needed:
+  https://fred.stlouisfed.org/graph/fredgraph.csv?id=<SERIES_ID>
+Download exactly these six series and keep a one-line comment in the code explaining why each matters for these asset classes:
+  DGS10     10-year Treasury yield (daily)       - discount rate; drives bond prices and equity valuations
+  T10Y2Y    10-year minus 2-year spread (daily)  - yield-curve slope; recession and growth signal
+  VIXCLS    CBOE VIX (daily)                     - equity risk appetite
+  FEDFUNDS  Effective federal funds rate (monthly) - policy stance; cost of carry for gold and credit
+  CPIAUCSL  CPI all urban consumers (monthly)    - inflation; matters for TIPS, gold, real yields
+  UNRATE    Unemployment rate (monthly)          - labour market and growth cycle
+
+RULES
+1. Missing values in the CSV are marked with "." - treat them as missing and drop them.
+2. HARD RULE: keep only observations dated from 2019-01-01 to 2024-12-31 inclusive. Nothing dated after 2024-12-31 may be
+   downloaded into the result or used anywhere. (The model is estimated on 2021-2024; 2019-2020 is only needed to compute
+   12-month changes and lags.) Add an assert that the latest date of every series is <= 2024-12-31.
+3. Convert every series to month-end frequency: for daily series (DGS10, T10Y2Y, VIXCLS) use the monthly mean of the daily
+   values; for monthly series use the value as is, indexed by the calendar month-end.
+4. Save the combined table (one row per month-end, one column per series) to macro.csv.
+5. Print: the last available date of each series, the number of months, a count of missing values per column,
+   and the first and last 3 rows of the table. Also print a short summary table (mean, min, max over 2021-2024 per series).
+Return only the code in one block.
