@@ -5,7 +5,7 @@ import zipfile
 import pandas as pd
 import yfinance as yf
 
-from config import (ALL, BASE_DATE, DATA_DIR, FF_URL, FRED_SERIES, HOLD_END,
+from config import (ALL, BASE_DATE, DATA_DIR, PRICE_DIR, FF_URL, FRED_SERIES, HOLD_END,
                     MACRO_CAP, MACRO_START)
 
 _UA = {"User-Agent": "Mozilla/5.0"}
@@ -18,7 +18,8 @@ def _month_end(idx):
 def load_prices(refresh=False):
     """Month-end (adj close, close), BASE_DATE..HOLD_END. Cached so adjusted
     closes do not drift when Yahoo restates dividends."""
-    fa, fc = DATA_DIR / "prices_adj.csv", DATA_DIR / "prices_close.csv"
+    fa, fc = PRICE_DIR / "prices_adj.csv", PRICE_DIR / "prices_close.csv"
+    PRICE_DIR.mkdir(parents=True, exist_ok=True)
     if refresh or not (fa.exists() and fc.exists()):
         px = yf.download(ALL, start="2020-11-20", end="2026-01-10", interval="1d",
                          auto_adjust=False, progress=False)

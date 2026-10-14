@@ -9,7 +9,7 @@ from docx import Document
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.shared import Pt, RGBColor
 
-from config import ALL
+from config import ALL, BENCHMARK, CUSTOM
 from evaluate import holdout_inputs, metrics, wealth
 from data import load_french, rf_decimal
 from forward_model import forward_ocp
@@ -17,6 +17,8 @@ from optimize import estimation_inputs, mvp, ocp, orp, port_stats
 from robustness import compare_lw, sensitivity
 
 ROOT = Path(__file__).parent
+if CUSTOM:
+    raise SystemExit("make_report.py writes prose about the default 10 ETFs and the saved LLM runs; it is not for FIN_TICKERS portfolios.")
 PR = ROOT / "docs" / "deliverables" / "prompts"
 
 # ---------------------------------------------------------------- numbers
@@ -29,9 +31,9 @@ o6 = {"w_risky": np.array([L["weights"][t] for t in ALL]), "w_rf": L["weights"][
 r25, rf25 = holdout_inputs()
 res8 = {}
 for lab, o in (("Step 4c OCP", o4), ("Step 6b OCP (LLM)", o6)):
-    res8[lab] = metrics(wealth(o["w_risky"], o["w_rf"], r25, rf25), rf25, r25["SPY"])
-res8["SPY (benchmark)"] = metrics(wealth(np.eye(10)[0], 0.0, r25, rf25), rf25, r25["SPY"])
-res8["ORP only, unlevered"] = metrics(wealth(w_orp, 0.0, r25, rf25), rf25, r25["SPY"])
+    res8[lab] = metrics(wealth(o["w_risky"], o["w_rf"], r25, rf25), rf25, r25[BENCHMARK])
+res8["SPY (benchmark)"] = metrics(wealth(np.eye(10)[ALL.index(BENCHMARK)], 0.0, r25, rf25), rf25, r25[BENCHMARK])
+res8["ORP only, unlevered"] = metrics(wealth(w_orp, 0.0, r25, rf25), rf25, r25[BENCHMARK])
 etf25 = (1 + r25).prod() - 1
 boot = sensitivity(r, rf_m, n=300, scale=0, seed=0, mode="bootstrap")
 pert = sensitivity(r, rf_m, n=300, scale=0.10, seed=0, mode="perturb")
