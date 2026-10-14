@@ -60,3 +60,12 @@ def test_solver_preload_names_defined(tmp_path_factory):
     build(str(p))
     names = openpyxl.load_workbook(p)["S8_Solver"].defined_names
     assert "solver_opt" in names and "solver_adj" in names
+
+
+def test_equal_start_option_gives_solver_a_real_job(tmp_path):
+    p = tmp_path / "eq.xlsx"
+    build(str(p), equal_start=True)
+    s = openpyxl.load_workbook(p)["S8_Solver"]
+    assert all(abs(s.cell(9, 2 + j).value - 0.1) < 1e-12 for j in range(10))
+    assert all(abs(s.cell(15, 2 + j).value - 0.1) < 1e-12 for j in range(10))
+    assert abs(s["B23"].value - 0.5) < 1e-12
