@@ -66,3 +66,31 @@ Result (fresh Claude subagent, tools disabled): **PASS on the first attempt.** T
 (Jan 2019 - Dec 2024) that is **identical (max abs diff 0.0 in all six columns)** to the macro table used by the Python reference.
 It enforced the cap twice: server-side (`cosd`/`coed` query parameters, so later data is never downloaded) and with an assert on every series.
 Code: `llm_code/macro_download.py`, output `llm_code/macro_download/macro.csv`.
+
+## Prompt D: forward-looking macro model and 2025 OCP, A = 7 (Steps 6b)
+
+### v1 (text: `prompts/promptD_v1.txt`)
+Full spec: data (ETFs, French RF, FRED with a hard 2024-12-31 cap), six features lagged one month (CPI and unemployment lagged one extra
+month for publication delay), per-ETF ridge regression with the penalty chosen by leave-one-out CV, Dec-2024 features -> 2025 forecast,
+Ledoit-Wolf covariance, long-only ORP (>= 2 ETFs) and OCP.
+
+Result (fresh Claude subagent): the code ran unmodified and followed the spec exactly (including the data-cutoff asserts), **but the
+economic result is not defensible**:
+| Quantity | LLM v1 output |
+|---|---|
+| Penalty chosen (LOO-CV, grid 0.01 to 10^4) | AGG alpha = 1.12 (all others 300 to 10,000) |
+| AGG forecast | **+18.7% a year** (its 2021-24 mean was -2.0%) |
+| ORP | **AGG 85.9%**, XLE 10.4%, GLD 3.7% |
+| OCP | AGG 311%, XLE 37.6%, GLD 13.5%, risk-free **-262%**; y = 3.62; return 60.8%, sd 28.8% |
+| LOO R-squared | negative for 9 of 10 ETFs; only AGG positive (0.079) |
+
+Root cause: with 48 observations, leave-one-out CV picks a nearly unregularised fit for AGG, which then fits the 2022 bond-market crash
+(yield level and rate regressors) and extrapolates it. That one spuriously high forecast dominates the optimiser. This is a flaw in the
+specification, not in the code.
+
+### v2 (text: `prompts/promptD_v2.txt`)
+Changes: (1) the penalty grid is restricted to `np.logspace(np.log10(50), 3, 30)` (never lighter than about the sample size) with the
+reason stated; (2) the script must print each forecast next to the ETF's historical mean; (3) hard sanity asserts: every forecast within
+0.15 of its own historical mean, and y < 2.5.
+
+Result: _pending_
