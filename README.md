@@ -51,7 +51,7 @@ pytest -q                          # optional: 38 tests, about 1 minute
 | Build a workbook that starts Solver from equal weights (a real Solver test) | `python build_workbook.py FIN3702B_SolverTest.xlsx --equal-start` |
 | Check Excel against Python after running Solver | `python tests/reconcile.py FIN3702B_SolverTest.xlsx` |
 | Build the prompts document (default 10 ETFs only) | `python make_report.py` |
-| Zip the deliverables | `python package.py B1_Group1` (use your group token) |
+| Zip the deliverables | `python package.py B1_Group6`|
 
 Price, Fama-French and FRED data are downloaded on first use and cached in `data/`. Delete a CSV there to re-download it.
 
