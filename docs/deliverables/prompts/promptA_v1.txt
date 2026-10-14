@@ -1,0 +1,41 @@
+You are a quantitative finance programmer. Write ONE self-contained Python 3 script
+(runs top-to-bottom in Google Colab with only pip installs at the top) that does the following.
+
+DATA
+1. Download MONTHLY ADJUSTED CLOSE prices from Yahoo Finance (yfinance) for these 10 ETFs:
+   SPY, IWM, VEA, VWO, XLE, QQQ, AGG, TIP, HYG, GLD.
+   Download daily data from 2020-11-20 to 2026-01-10 with auto_adjust=False, take the "Adj Close"
+   column, and resample to month-end using the LAST available trading day of each month.
+   Keep month-ends from 2020-12-31 to 2024-12-31.
+2. Download the Fama-French monthly factors from
+   https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip
+   Use the monthly table only (rows whose first field is a 6-digit YYYYMM). Take the RF column,
+   which is in PERCENT, divide by 100, and index by month-end.
+3. Compute simple monthly returns = P_t / P_(t-1) - 1. The first return is Jan 2021, the last is
+   Dec 2024, giving exactly 48 observations per ETF. Assert that.
+
+STATISTICS (per ETF and for portfolios)
+- Annualised return = arithmetic mean of monthly returns x 12.
+- Annualised standard deviation = sample standard deviation (ddof=1) of monthly returns x sqrt(12).
+- Annualised risk-free rate = mean of the 48 monthly RF values x 12.
+- Sharpe ratio = (annualised return - annualised risk-free) / annualised standard deviation.
+- Annualised covariance matrix = sample covariance (ddof=1) of monthly returns x 12.
+
+OPTIMISATION (scipy.optimize.minimize, method SLSQP, bounds 0..1 for every weight, weights sum to 1,
+NO short selling; try at least 10 different starting points and keep the best solution)
+a) MVP: minimise portfolio variance.
+b) ORP: maximise the Sharpe ratio. The ORP must hold at least 2 ETFs with weight > 0.0001;
+   if it does not, raise an error that says to choose other ETFs.
+c) OCP with risk aversion A = 7: y = (E[r_ORP] - rf) / (A x variance_ORP).
+   OCP risky weights = y x ORP weights; the remainder (1 - y) is in the risk-free asset
+   (negative if y > 1, meaning borrowing at the risk-free rate).
+   OCP return = rf + y x (E[r_ORP] - rf); OCP sd = y x sd_ORP.
+
+OUTPUT
+- Print a table of the 10 ETFs with annualised return, sd, Sharpe.
+- Print weights, annualised return, sd and Sharpe for MVP, ORP and OCP.
+- Write results to an Excel file "ai_results.xlsx" (openpyxl or xlsxwriter) with one worksheet
+  "Results" showing those tables, and ALSO save results.json with this exact structure:
+  {"mvp": {"weights": {...}, "ret": x, "sd": x}, "orp": {...}, "ocp": {...}} where ret and sd
+  are annualised decimals (0.10 = 10%).
+Return only the code in one block.
