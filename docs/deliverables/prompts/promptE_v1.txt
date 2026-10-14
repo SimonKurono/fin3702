@@ -1,0 +1,72 @@
+You are a portfolio strategist writing for an investment committee. Below is the exact output of a forward-looking macro model
+that was estimated ONLY on data up to 2024-12-31 to choose a portfolio for 2025 (risk aversion A = 7, long-only ETFs, risk-free asset available,
+borrowing at the risk-free rate allowed). The ETFs are SPY (US large cap), IWM (US small cap), VEA (developed ex-US), VWO (emerging markets),
+XLE (energy sector), QQQ (Nasdaq-100), AGG (US aggregate bonds), TIP (inflation-protected Treasuries), HYG (high-yield credit), GLD (gold).
+"alpha" is the ridge penalty, LOO_R2 is the leave-one-out R-squared, mu_fwd is the model's annualised 2025 expected return and hist_mu is the
+2021-2024 historical annualised mean.
+
+--- MODEL OUTPUT START ---
+Dec-2024 feature values used for the forecast:
+y10         4.5800
+curve       0.3300
+vix        15.8662
+ffr         4.4800
+cpi_yoy     2.7195
+unrate      4.2000
+
+Ridge diagnostics (alpha, leave-one-out R2, forecast vs historical mean):
+         alpha  LOO_R2  mu_fwd  hist_mu
+SPY  1000.0000 -0.0443  0.1533   0.1401
+IWM  1000.0000 -0.0468  0.0769   0.0645
+VEA  1000.0000 -0.0484  0.0565   0.0477
+VWO  1000.0000 -0.0440  0.0237   0.0118
+XLE   485.2419 -0.0371  0.2364   0.2824
+QQQ   261.0836 -0.0387  0.2114   0.1493
+AGG    50.0000 -0.0240  0.0444  -0.0199
+TIP  1000.0000 -0.0457  0.0016  -0.0033
+HYG   394.6681 -0.0387  0.0496   0.0301
+GLD   394.6681 -0.0358  0.1155   0.0859
+
+Ridge coefficients (standardised features):
+         y10    curve      vix      ffr  cpi_yoy   unrate
+SPY  0.00030  0.00010 -0.00012  0.00028 -0.00046  0.00022
+IWM  0.00033 -0.00000  0.00003  0.00029 -0.00049  0.00027
+VEA  0.00035 -0.00006  0.00009  0.00025 -0.00022  0.00014
+VWO  0.00037 -0.00012 -0.00002  0.00036 -0.00034  0.00011
+XLE -0.00139  0.00090  0.00137 -0.00155  0.00019  0.00090
+QQQ  0.00147  0.00001 -0.00082  0.00159 -0.00174  0.00066
+AGG  0.00275  0.00072 -0.00019  0.00138 -0.00071  0.00081
+TIP  0.00010  0.00007 -0.00009  0.00007 -0.00015  0.00010
+HYG  0.00061 -0.00013 -0.00023  0.00049 -0.00042  0.00007
+GLD  0.00101 -0.00032 -0.00067  0.00086 -0.00018 -0.00055
+
+ORP: E[r] = 18.0201%, sd = 11.8135%, Sharpe = 1.2848
+
+Weights:
+             ORP     OCP
+SPY       0.0000  0.0000
+IWM       0.0000  0.0000
+VEA       0.0000  0.0000
+VWO       0.0000  0.0000
+XLE       0.2595  0.4032
+QQQ       0.3472  0.5395
+AGG       0.0000  0.0000
+TIP       0.0000  0.0000
+HYG       0.0000  0.0000
+GLD       0.3932  0.6110
+RiskFree  0.0000 -0.5536
+
+OCP (A = 7): y = 1.5536
+  Expected return: 26.4230%
+  Standard deviation: 18.3539%
+  Sharpe ratio: 1.2848
+--- MODEL OUTPUT END ---
+
+Write a justification of the recommended optimum complete portfolio (OCP) of at most 600 words, with these five headed parts:
+1. Macro backdrop at December 2024 (use the feature values above; say what each implies for equities, bonds and gold).
+2. Why each ETF with a non-zero weight was chosen, and why the others received zero.
+3. Why the portfolio is leveraged (the role of the risky share y and the borrowing assumption), and what that does to risk.
+4. Risks and scenarios in which this portfolio would underperform.
+5. Statistical honesty: what the LOO_R2 values and the use of only 48 monthly observations imply about how much to trust the forecasts.
+RULES: use ONLY numbers that appear in the model output above, quoted exactly; do not invent any other statistic, forecast or market event,
+and do not refer to anything that happened after 2024-12-31.

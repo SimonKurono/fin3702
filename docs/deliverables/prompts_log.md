@@ -110,3 +110,18 @@ by the LLM; it changes forecasts by under 1 point and the conclusion not at all.
 **Key honest finding for Step 9:** every leave-one-out R-squared is negative (-0.02 to -0.05), i.e. the macro features have no demonstrable
 out-of-sample predictive power on 48 monthly observations. The ridge penalty shrinks the forecasts almost back to each ETF's history, and what
 remains is a mild tilt (more QQQ and GLD, less XLE than the pure 2021-24 ORP). The model is therefore well-behaved, not clever.
+
+## Prompt E: justification of the portfolio mix (Step 6c)
+
+### v1 (text: `prompts/promptE_v1.txt`)
+The actual output of Prompt D v2 (feature values, ridge diagnostics, coefficients, ORP/OCP weights) is pasted into the prompt; the LLM must write a
+justification in five headed parts and may use only numbers that appear in that output. Answer saved in `llm_code/justification_v1.md`.
+
+Result (fresh Claude subagent): **good.** `tests/check_numbers_cited.py` found 54 numbers in the answer and **none that are absent from the data**
+(one initial flag, 0.00030, was a bug in our checker's rounding, not a hallucination; fixed). Content: macro backdrop from the six Dec-2024 features,
+why GLD/QQQ/XLE and not the other seven, the role of y = 1.5536 and the optimistic borrowing assumption (Sharpe unchanged at 1.2848 by leverage),
+concentration, tech/energy/gold/correlated-stress risks, and an explicit statement that all LOO R-squared values are negative so the forecasts
+carry little proven macro signal.
+Compliance slip: 667 words against the 600-word limit. Not corrected (content unaffected); a stricter v2 would say "no more than 550 words".
+Weakness to mention in Step 9: some statements are generic finance narrative (e.g. "gold is exposed to high yields") rather than derived from the
+model; the model's own coefficients are tiny, so the narrative explains the weights more confidently than the statistics support.
