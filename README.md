@@ -8,6 +8,28 @@ Ledoit-Wolf / bootstrap robustness checks.
 Default portfolio: SPY, IWM, VEA, VWO, XLE, QQQ (equity), AGG, TIP, HYG (bonds), GLD (alternative).
 Estimation window: 48 monthly returns, Jan 2021 to Dec 2024. 2025 is a hold-out used only in Step 8.
 
+## Start here: main files
+
+**Deliverables**
+- [Excel workbook](FIN3702B_Portfolio.xlsx): Cover and S1 to S8 (summary, frontier chart, AI chart, prices, macro, returns, covariance, Solver set-up)
+- [Excel workbook for a Solver test](FIN3702B_SolverTest.xlsx): same, starting from equal weights
+- [Prompts and answers (Word)](Prompts_and_Answers.docx): all prompts, Step 8 and Step 9 answers, the 48-observation caveat
+
+**Results and charts**
+- [Frontier chart made by the LLM code (PNG)](llm_code/mvf_v1/mvf_ai.png) and [its Excel output](llm_code/mvf_v1/ai_mvf.xlsx)
+- [LLM optimiser output (Excel)](llm_code/optimiser_v1/ai_results.xlsx) and [forward-model output (Excel)](llm_code/forward_model_llm_v2/forward_results.xlsx)
+- Saved Python results: [Step 4](docs/results_step4.txt), [Step 6](docs/results_step6.txt), [Step 8](docs/results_step8.txt), [robustness](docs/results_robustness.txt)
+- [Excel vs Python reconciliation](docs/reconciliation.md)
+
+**Prompts**
+- [Prompt files A to E](docs/deliverables/prompts/) and the [prompt test log](docs/deliverables/prompts_log.md)
+- [Demo runbook](docs/deliverables/demo_runbook.md) and [Q&A cheat sheet](docs/deliverables/qa_cheatsheet.md)
+
+**Main code**
+- [config.py](config.py) (tickers, dates) | [data.py](data.py) | [optimize.py](optimize.py) (MVP, ORP, OCP) | [forward_model.py](forward_model.py) (Step 6)
+- [evaluate.py](evaluate.py) (Step 8) | [robustness.py](robustness.py) | [build_workbook.py](build_workbook.py) | [run_analysis.py](run_analysis.py) | [make_report.py](make_report.py) | [package.py](package.py)
+- [Code the LLM wrote, unmodified](llm_code/) and [tests](tests/)
+
 ## 1. Set up (once)
 
 Needs Python 3.10+ and internet access (Yahoo Finance, Ken French's library, FRED). Excel with the Solver add-in is needed only for the Solver step.
