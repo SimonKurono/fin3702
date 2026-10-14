@@ -1,0 +1,36 @@
+mu_fwd vs historical (annualised):
+     mu_fwd    hist
+SPY  0.1522  0.1401
+IWM  0.0758  0.0645
+VEA  0.0556  0.0477
+VWO  0.0232  0.0118
+XLE  0.2259  0.2824
+QQQ  0.2038  0.1493
+AGG  0.0363 -0.0199
+TIP  0.0012 -0.0033
+HYG  0.0457  0.0301
+GLD  0.1116  0.0859
+LOO R2 (all <=0 means no out-of-sample skill):
+SPY   -0.045
+IWM   -0.047
+VEA   -0.049
+VWO   -0.044
+XLE   -0.035
+QQQ   -0.039
+AGG   -0.029
+TIP   -0.046
+HYG   -0.040
+GLD   -0.037
+ridge alpha (floor 50):
+SPY    1000.0
+IWM    1000.0
+VEA    1000.0
+VWO    1000.0
+XLE     394.7
+QQQ     289.5
+AGG      50.0
+TIP    1000.0
+HYG     485.2
+GLD     437.6
+ORP: {'XLE': 0.258, 'QQQ': 0.3493, 'GLD': 0.3927}
+OCP y 1.483 ret 0.2432 sd 0.1752
