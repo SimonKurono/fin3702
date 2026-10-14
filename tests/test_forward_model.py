@@ -37,3 +37,10 @@ def test_ridge_floor_prevents_overfit_and_absurd_forecasts():
     assert (out["alpha"] >= ALPHA_FLOOR - 1e-9).all()
     assert (out["mu_fwd"] - st["ret"]).abs().max() < 0.15      # forecasts stay near history
     assert forward_ocp()["ocp"]["y"] < 2.5                     # no absurd leverage
+
+
+def test_forward_ocp_accepts_a_higher_riskfree_rate_and_levers_less():
+    base = forward_ocp()
+    higher = forward_ocp(rf=0.044)
+    assert higher["rf"] == 0.044
+    assert higher["ocp"]["y"] < base["ocp"]["y"]

@@ -39,8 +39,10 @@ def fit_forward(r_est, feats):
     return {"mu_fwd": mu_fwd, "alpha": alphas, "coefs": coefs, "loo_r2": pd.Series(loo)}
 
 
-def forward_ocp():
-    r, rf_m, st, S_sample, rf = estimation_inputs()
+def forward_ocp(rf=None):
+    """rf defaults to the brief's convention (2021-24 mean); pass a Dec-2024 rate for a sensitivity run."""
+    r, rf_m, st, S_sample, rf_default = estimation_inputs()
+    rf = rf_default if rf is None else rf
     fit = fit_forward(r, build_features(load_macro()))
     S_lw = pd.DataFrame(LedoitWolf().fit(r.values).covariance_ * 12,
                         index=r.columns, columns=r.columns)

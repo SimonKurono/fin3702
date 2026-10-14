@@ -16,9 +16,9 @@ every leave-one-out R-squared was negative. The tilt to QQQ and GLD, plus more l
 **Why is XLE so large?** Energy had the best 2021-24 Sharpe (0.905) because of the 2021-22 energy boom. A backward-looking optimiser chases it. That is a reason for caution, and why we show the sensitivity.
 
 **You borrow. What if borrowing costs more?** The model assumes borrowing at the risk-free rate. In 2025 the realised risk-free rate averaged 4.17% against 2.84% assumed, and real brokers charge a spread above that.
-Without leverage the ORP alone finished 2025 at $132,704.
+Without leverage the ORP alone finished 2025 at $132,704. Both OCPs also use the 2021-24 average risk-free rate (2.84%), the brief's convention; at the 2024 average (5.13%) the 6b risky share would fall from 1.48 to 1.21 with the same three ETFs.
 
-**What if the LLM hallucinates or writes wrong code?** We never trust it unchecked: (1) the maths is reproduced independently in Python and in Excel Solver (agreement better than 1e-12 for the formulas, 1e-6 for the LLM code); (2) the prompts contain hard rules and assert checks;
+**What if the LLM hallucinates or writes wrong code?** We never trust it unchecked: (1) the maths is reproduced independently in Python and in Excel formulas (agreement better than 1e-12) and in the LLM's code (1e-6); the Excel Solver run is to be completed by the team before presenting; (2) the prompts contain hard rules and assert checks;
 (3) every prompt was reproduced in a fresh session and repeated; (4) the narrative was screened mechanically (54 of 54 numbers traceable). We also show the failure we caught: Prompt D v1 forecast AGG at +18.7% a year until we fixed the specification.
 
 **Who is accountable?** The firm and a named adviser, never the model. A human signs off every recommendation and the prompts, code and outputs are kept as the audit trail.
@@ -29,4 +29,4 @@ Without leverage the ORP alone finished 2025 at $132,704.
 
 **Cost and practicality?** Free data (Yahoo, FRED, French) and a free LLM, minutes of runtime. A production version would need licensed data, transaction costs, taxes, margin rules and MAS-style model-risk governance.
 
-**How do I know the 'optimal' portfolio is right?** Excel Solver, Python and the LLM's code all agree on the same weights and statistics. 'Right' here means the mean-variance optimum of the sample, which is only as good as the sample.
+**How do I know the 'optimal' portfolio is right?** Excel formulas, Python and the LLM's code all agree on the same weights and statistics (Solver run to be confirmed by the team). 'Right' here means the mean-variance optimum of the sample, which is only as good as the sample.

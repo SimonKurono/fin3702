@@ -11,6 +11,8 @@ from docx.shared import Pt, RGBColor
 
 from config import ALL
 from evaluate import holdout_inputs, metrics, wealth
+from data import load_french, rf_decimal
+from forward_model import forward_ocp
 from optimize import estimation_inputs, mvp, ocp, orp, port_stats
 from robustness import compare_lw, sensitivity
 
@@ -34,6 +36,10 @@ etf25 = (1 + r25).prod() - 1
 boot = sensitivity(r, rf_m, n=300, scale=0, seed=0, mode="bootstrap")
 pert = sensitivity(r, rf_m, n=300, scale=0.10, seed=0, mode="perturb")
 lw = compare_lw()
+rf24 = float(rf_decimal(load_french())["2024-01-31":"2024-12-31"].mean() * 12)
+sens_rf = forward_ocp(rf=rf24)   # Python replica of Step 6b with the rate known at the end of 2024
+base_rf = forward_ocp()
+share1 = float(((boot["weights"]["ORP"] > 0.01).sum(axis=1) < 2).mean())
 
 # ---------------------------------------------------------------- docx helpers
 doc = Document()
@@ -127,9 +133,9 @@ prompt_section("Prompt D: forward-looking model and the 2025 optimum complete po
     [("Prompt D, version 1 (superseded)", "promptD_v1.txt"), ("Prompt D, version 2 (final)", "promptD_v2.txt")],
     ["Version 1 produced code that followed the specification exactly but an indefensible result: leave-one-out cross-validation chose an almost unregularised penalty (alpha 1.1) for AGG, which then fitted the 2022 bond-market crash. Forecast for AGG: +18.7% a year against a 2021-24 mean of -2.0%; ORP 85.9% AGG; OCP 311% in AGG, 3.6x leverage, 60.8% expected return.",
      "Root cause: a flaw in the specification (too little data for a free penalty), not in the code. Version 2 restricts the penalty grid to alpha >= 50 (about the sample size), prints each forecast beside the ETF's historical mean, and adds hard asserts (every forecast within 0.15 of its own historical mean; y < 2.5).",
-     "Version 2 result: AGG forecast +4.4%; OCP = XLE 40.3%, QQQ 54.0%, GLD 61.1%, risk-free -55.4%; y = 1.554; expected return 26.4%, st. dev. 18.4%, Sharpe 1.285. An independent Python replica gives the same structure within about 2 points on every weight (y = 1.483, return 24.3%).",
+     "Version 2 result: AGG forecast +4.4%; OCP = XLE 40.3%, QQQ 54.0%, GLD 61.1%, risk-free -55.4%; y = 1.554; expected return 26.4%, st. dev. 18.4%, Sharpe 1.285. An independent Python replica gives the same structure within about 3 points on every weight (largest gap: GLD 61.1% vs 58.2%; y = 1.483, return 24.3%).",
      "Residual difference: the LLM used month-end values for the 10-year yield and curve slope where the prompt said monthly mean (a compliance slip; effect under one percentage point).",
-     "Every leave-one-out R-squared is negative (-0.02 to -0.05): the macro features show no out-of-sample skill on 48 observations. The ridge penalty shrinks forecasts back toward history, so the model is well-behaved rather than predictive."],
+     "Every leave-one-out R-squared is negative (-0.02 to -0.05): the macro features show no out-of-sample skill on 48 observations. The ridge penalty shrinks forecasts back toward history, so the model is well-behaved rather than predictive. Caution: the penalties are heavily shrunk (five of the ten sit at the 1000 edge of the grid), so a negative leave-one-out R-squared here mostly means 'no better than predicting each ETF's own mean'."],
     ["Prompt D v1 output showing the AGG blow-up", "Prompt D v2 output with diagnostics and weights"])
 prompt_section("Prompt E: justification of the portfolio mix (Step 6c)",
     "Asks the LLM to justify the Step 6b portfolio using only the numbers in the model output pasted into the prompt.",
@@ -157,6 +163,11 @@ p("Which performed better? On most measures the Step 6b portfolio did: it has th
   f"M-squared ({pc(b_['m2'])} vs {pc(a_['m2'])}), information ratio ({b_['info_ratio']:.2f} vs {a_['info_ratio']:.2f}) and the shallower maximum drawdown ({pc(b_['max_drawdown'])} vs {pc(a_['max_drawdown'])}). "
   f"The one measure that favours Step 4c is the Treynor ratio ({a_['treynor']:.2f} vs {b_['treynor']:.2f}), because 6b carries about twice the market beta ({b_['beta']:.2f} vs {a_['beta']:.2f}) and Treynor divides by beta. "
   "Sharpe and Sortino use total risk and Jensen's alpha is measured against the market, so for a client who holds only this portfolio the total-risk measures are the relevant ones and favour 6b.")
+p("Risk-free rate convention", bold=True)
+p(f"Both OCPs are built with the 2021-24 average risk-free rate ({rf:.2%}), the brief's single-rate convention, which keeps the two portfolios comparable. "
+  f"A forward-looking investor in December 2024 would face a higher rate (the 2024 average was {rf24:.2%}). Rerunning the Step 6 model's Python replica at {rf24:.2%} lowers the OCP's risky share from y = {base_rf['ocp']['y']:.2f} to {sens_rf['ocp']['y']:.2f} "
+  f"and shifts the ORP weights by only a few points (XLE {pc(sens_rf['w_orp'][ALL.index('XLE')])}, QQQ {pc(sens_rf['w_orp'][ALL.index('QQQ')])}, GLD {pc(sens_rf['w_orp'][ALL.index('GLD')])}), keeping the same three ETFs. "
+  "So the convention affects how much leverage 6b uses, not which assets it holds.")
 p("Why we should not over-read this", bold=True)
 bullets([f"One asset explains most of 2025: GLD returned {pc(etf25['GLD'])}. The 6b portfolio put {pc(o6['w_risky'][ALL.index('GLD')])} of capital in GLD versus {pc(o4['w_risky'][ALL.index('GLD')])} for 4c, and it was more leveraged (y = {L['y']:.2f} vs {o4['y']:.2f}). Leverage amplifies whatever the risky mix does.",
          "The 6b advantage cannot be credited to macro forecasting skill: every leave-one-out R-squared in the macro model is negative. The tilt towards QQQ and GLD, and the extra leverage, happened to pay in 2025.",
@@ -177,12 +188,12 @@ bullets(["Specification-blind in modelling judgement: Prompt D v1 obeyed the ins
          "Run-to-run variability: the same prompt gave different code each time (different start points, sheet layouts). Results agreed here because the task is deterministic maths, but free-form modelling choices would not."])
 h("Risks", 2)
 bullets(["Estimation error (the central quantitative risk). With 48 observations the optimiser is fragile. Resampling the 48 months (bootstrap, 300 draws) moves the ORP weight on XLE between "
-         f"{pc(boot['summary']['ORP']['p05']['XLE'])} and {pc(boot['summary']['ORP']['p95']['XLE'])}, QQQ between {pc(boot['summary']['ORP']['p05']['QQQ'])} and {pc(boot['summary']['ORP']['p95']['QQQ'])}, and GLD between {pc(boot['summary']['ORP']['p05']['GLD'])} and {pc(boot['summary']['ORP']['p95']['GLD'])} (5th to 95th percentile); in {pc(boot['frac_orp_lt2'])} of draws the ORP collapses to a single ETF. "
+         f"{pc(boot['summary']['ORP']['p05']['XLE'])} and {pc(boot['summary']['ORP']['p95']['XLE'])}, QQQ between {pc(boot['summary']['ORP']['p05']['QQQ'])} and {pc(boot['summary']['ORP']['p95']['QQQ'])}, and GLD between {pc(boot['summary']['ORP']['p05']['GLD'])} and {pc(boot['summary']['ORP']['p95']['GLD'])} (5th to 95th percentile); in {pc(boot['frac_orp_lt2'])} of draws the ORP collapses to a single ETF (and {pc(share1)} of draws if a second ETF only counts once it holds at least 1%: the 1% threshold; the 2-ETF test in the code uses 0.01%, as in the brief's prompts). "
          f"By contrast, perturbing the covariance matrix by about 10% moves ORP weights by only about {pert['summary']['ORP']['std'][['XLE','QQQ','GLD']].mean() * 100:.0f} percentage points, and a Ledoit-Wolf covariance gives almost the same ORP (XLE {pc(lw.loc['XLE','ORP_LW'])}, QQQ {pc(lw.loc['QQQ','ORP_LW'])}, GLD {pc(lw.loc['GLD','ORP_LW'])}). The fragility therefore lies in the expected-return estimates, not the covariance matrix.",
          "Data leakage / look-ahead: the macro data runs to 2026, so an LLM, or a careless user, can easily include post-2024 data. We prevented it with a server-side date cap, asserts, and a publication-lag shift for CPI and unemployment.",
          "Model risk and leverage: the OCP borrows (y = 1.23 for 4c and 1.55 for 6b) at the risk-free rate, which is optimistic; realised 2025 financing cost was higher than the estimation-window average.",
          "Hallucination: an LLM may cite numbers or events that do not exist. We screened Prompt E's answer mechanically (54 of 54 numbers traceable to the data).",
-         "Mitigations we used: independent Python and Excel Solver cross-checks; sanity asserts in the prompts; a 'no data after 2024-12-31' rule enforced in code; fresh-session reproduction of every prompt; repeat runs; mechanical number screening; and reporting uncertainty (bootstrap ranges) next to every recommendation."])
+         "Mitigations we used: independent Python and Excel-formula cross-checks (the Excel Solver run is to be confirmed by the team); sanity asserts in the prompts; a 'no data after 2024-12-31' rule enforced in code; fresh-session reproduction of every prompt; repeat runs; mechanical number screening; and reporting uncertainty (bootstrap ranges) next to every recommendation."])
 h("Ethical considerations", 2)
 bullets(["Suitability and fiduciary duty: an LLM does not know the client's circumstances. A leveraged portfolio (123% to 155% of capital in risky assets) is not suitable for every A = 7 investor; a human adviser must confirm suitability and explain leverage.",
          "Transparency and explainability: clients should be told that an LLM wrote the code and the narrative, and that the narrative is a story consistent with the weights, not proof of why they are optimal.",
