@@ -77,3 +77,13 @@ def test_sheet3_embeds_the_ai_generated_chart(tmp_path_factory):
     build(str(p))
     names = zipfile.ZipFile(p).namelist()
     assert any(n.startswith("xl/media/") and n.endswith(".png") for n in names)
+
+
+def test_step6b_column_uses_the_llm_prompt_d_output(tmp_path_factory):
+    import json
+    p = tmp_path_factory.mktemp("g") / "g.xlsx"
+    build(str(p))
+    s1 = openpyxl.load_workbook(p)["S1_Summary"]
+    llm = json.load(open("llm_code/forward_model_llm_v2/forward_results.json"))
+    for j, t in enumerate(["SPY", "IWM", "VEA", "VWO", "XLE", "QQQ", "AGG", "TIP", "HYG", "GLD"]):
+        assert abs(s1.cell(4 + j, 5).value - llm["weights"][t]) < 1e-9

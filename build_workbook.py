@@ -3,6 +3,8 @@ from pathlib import Path
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name as col
 
+import json
+
 import numpy as np
 
 from config import ALL, A
@@ -111,12 +113,20 @@ def python_solution():
     mu = st["ret"].values
     w_mvp, w_orp = mvp(S.values), orp(mu, S.values, rf)
     o4 = ocp(w_orp, mu, S.values, rf, A)
-    fwd = forward_ocp()
+    fwd = forward_ocp()                      # Python reference replica of the Step 6 model
+    llm_path = Path(__file__).parent / "llm_code" / "forward_model_llm_v2" / "forward_results.json"
+    if llm_path.exists():                    # the AI deliverable: the LLM's own Step 6b OCP (Prompt D v2)
+        L = json.load(open(llm_path))
+        fwd_ocp = {"w_risky": np.array([L["weights"][t] for t in ALL]), "w_rf": L["weights"]["RiskFree"],
+                   "ret": L["ret"], "sd": L["sd"], "y": L["y"]}
+        fwd_src = "LLM (Prompt D v2)"
+    else:
+        fwd_ocp, fwd_src = fwd["ocp"], "Python reference"
     r25, rf25 = holdout_inputs()
     step8 = {}
-    for lab, o in (("4c", o4), ("6b", fwd["ocp"])):
+    for lab, o in (("4c", o4), ("6b", fwd_ocp)):
         step8[lab] = metrics(wealth(o["w_risky"], o["w_rf"], r25, rf25), rf25, r25["SPY"])
-    return {"w_mvp": w_mvp, "w_orp": w_orp, "ocp": o4, "fwd": fwd, "step8": step8,
+    return {"w_mvp": w_mvp, "w_orp": w_orp, "ocp": o4, "fwd": fwd, "fwd_ocp": fwd_ocp, "fwd_src": fwd_src, "step8": step8,
             "frontier": frontier(mu, S.values, 80), "rf": rf}
 
 
@@ -245,7 +255,7 @@ def write_summary(ws, f, py):
     for j, h in enumerate(heads):
         if h:
             ws.write(2, j, h, f["hdr"])
-    fwd = py["fwd"]["ocp"]
+    fwd = py["fwd_ocp"]
     for j, t in enumerate(ALL):
         row, c = 4 + j, col(1 + j)
         ws.write(f"A{row}", t, f["bold"])
@@ -267,10 +277,10 @@ def write_summary(ws, f, py):
         ws.write_formula(f"{x}19", f"=({x}17-$G$14)/{x}18", f["num"])
     for row, lab in ((17, "Expected return (annual)"), (18, "St. dev. (annual)"), (19, "Sharpe ratio")):
         ws.write(f"A{row}", lab, f["bold"])
-    fo = py["fwd"]["ocp"]
-    ws.write("A20", "Step 6b weights (yellow) come from the macro ridge model (forward_model.py). Columns B-E are all evaluated with the same "
+    fo = py["fwd_ocp"]
+    ws.write("A20", f"Step 6b weights (yellow) come from the {py['fwd_src']} macro ridge model. Columns B-E are all evaluated with the same "
                     "2021-24 sample estimates so they are comparable.", None)
-    ws.write("A21", f"Step 6b per its own model (macro-ridge E[r], Ledoit-Wolf covariance): return {fo['ret']:.1%}, "
+    ws.write("A21", f"Step 6b per its own model (macro-ridge E[r], Ledoit-Wolf covariance, y = {fo['y']:.2f}): return {fo['ret']:.1%}, "
                     f"st. dev. {fo['sd']:.1%}, Sharpe {(fo['ret'] - py['rf']) / fo['sd']:.2f}.", None)
     ws.write("A22", "STEP 8: $100,000 invested at the start of 2025, buy-and-hold (computed in Python: evaluate.py)", f["title"])
     ws.write("D23", "OCP (Step 4c)", f["hdr"]); ws.write("E23", "OCP (Step 6b)", f["hdr"])

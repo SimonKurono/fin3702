@@ -93,4 +93,20 @@ Changes: (1) the penalty grid is restricted to `np.logspace(np.log10(50), 3, 30)
 reason stated; (2) the script must print each forecast next to the ETF's historical mean; (3) hard sanity asserts: every forecast within
 0.15 of its own historical mean, and y < 2.5.
 
-Result: _pending_
+Result (fresh Claude subagent): **sane and reproducible.** Code: `llm_code/forward_model_llm_v2.py`, output `llm_code/forward_model_llm_v2/`.
+| Quantity | LLM v2 | Python reference replica |
+|---|---|---|
+| Penalties | AGG 50 (floor), others 261 to 1000 | AGG 50, others 290 to 1000 |
+| AGG forecast | +4.4% (hist -2.0%) | +3.6% |
+| Forecasts vs history | all within 0.15 (asserts pass) | same |
+| LOO R-squared | all negative (-0.024 to -0.048) | all negative |
+| OCP risky weights | XLE 40.3%, QQQ 54.0%, GLD 61.1%; rf -55.4% | XLE 38.2%, QQQ 51.8%, GLD 58.2%; rf -48.3% |
+| y / return / sd | 1.554 / 26.4% / 18.4% (Sharpe 1.285) | 1.483 / 24.3% / 17.5% |
+
+Same portfolio structure, no AGG, within about 2 points on every weight. The residual gap is explained: the LLM took the **month-end** value of
+DGS10 and T10Y2Y, whereas the prompt said monthly mean for daily series (it applied the mean only to VIX). That is a prompt-compliance slip
+by the LLM; it changes forecasts by under 1 point and the conclusion not at all. The workbook's Step 6b column uses the LLM's own v2 output.
+
+**Key honest finding for Step 9:** every leave-one-out R-squared is negative (-0.02 to -0.05), i.e. the macro features have no demonstrable
+out-of-sample predictive power on 48 monthly observations. The ridge penalty shrinks the forecasts almost back to each ETF's history, and what
+remains is a mild tilt (more QQQ and GLD, less XLE than the pure 2021-24 ORP). The model is therefore well-behaved, not clever.
