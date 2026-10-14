@@ -1,0 +1,23 @@
+
+[notice] A new release of pip is available: 25.2 -> 26.2.1
+[notice] To update, run: /Users/simon_pl19nc8/Developer/FIN3702B_Project/.venv/bin/python -m pip install --upgrade pip
+/Users/simon_pl19nc8/Developer/FIN3702B_Project/llm_code/mvf_v1/_runnable.py:222: UserWarning: FigureCanvasAgg is non-interactive, and thus cannot be shown
+  plt.show()
+Annualised risk-free rate: 2.8425%
+     ret_%   sd_%
+SPY  14.01  16.10
+IWM   6.45  21.28
+VEA   4.77  16.17
+VWO   1.18  15.01
+XLE  28.24  28.06
+QQQ  14.93  20.28
+AGG  -1.99   6.99
+TIP  -0.33   6.66
+HYG   3.01   8.41
+GLD   8.59  13.82
+
+MVP: ret 0.24% sd 6.49%
+ORP: ret 17.49% sd 13.04% Sharpe 1.123
+OCP: y = 1.230, ret 20.85% sd 16.04%
+
+DONE

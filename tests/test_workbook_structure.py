@@ -69,3 +69,11 @@ def test_equal_start_option_gives_solver_a_real_job(tmp_path):
     assert all(abs(s.cell(9, 2 + j).value - 0.1) < 1e-12 for j in range(10))
     assert all(abs(s.cell(15, 2 + j).value - 0.1) < 1e-12 for j in range(10))
     assert abs(s["B23"].value - 0.5) < 1e-12
+
+
+def test_sheet3_embeds_the_ai_generated_chart(tmp_path_factory):
+    import zipfile
+    p = tmp_path_factory.mktemp("s3") / "s3.xlsx"
+    build(str(p))
+    names = zipfile.ZipFile(p).namelist()
+    assert any(n.startswith("xl/media/") and n.endswith(".png") for n in names)

@@ -40,3 +40,19 @@ change the portfolio in a case where the brief says to choose other ETFs.
 Conclusion: for this task a loose prompt happens to work, but v1 is kept as the reference prompt because it pins down every convention
 (so a different LLM, or a later model version, cannot drift) and it makes the ORP >= 2 ETFs rule an error, as the brief requires.
 We did not invent failures to fill the discrepancy log: the brief asks to document discrepancies *if* they arise.
+
+## Prompt B: frontier chart written to an Excel worksheet (Step 5d)
+
+### v1
+Text: `prompts/promptB_v1.txt` (self-contained: repeats the data and statistics spec, adds the 80-point long-only frontier, the labelled
+chart with CAL, and the Excel/PNG output requirements).
+
+Result (fresh Claude subagent, tools disabled): **PASS on the first attempt.**
+- `results.json` matches Python to <= 1e-6 (MVP 0.24% / 6.49%, ORP 17.49% / 13.04%, OCP 20.85% / 16.04%).
+- Chart (`llm_code/mvf_v1/mvf_ai.png`) checked by eye: frontier is the expected sideways curve with the MVP at its left tip; the CAL is
+  tangent to the frontier at the ORP; the OCP lies on the CAL beyond the ORP (leveraged, y = 1.23); all 10 ETFs, MVP, ORP and OCP are labelled.
+- `ai_mvf.xlsx` has the single worksheet "MVF" with the 80-point table, the MVP/ORP/OCP table and the chart image at N2 (1 image, 93 rows).
+- Cosmetic flaw: the MVP label slightly overlaps the TIP ticker label. Not fixed (no effect on numbers).
+
+Practical note: the script calls `plt.show()`. In Colab this renders inline; run locally on macOS with a GUI backend it blocks until the window is
+closed (it hung our first local run). Run with `MPLBACKEND=Agg` locally. Sheet 3 of the workbook embeds this PNG.

@@ -1,0 +1,51 @@
+You are a quantitative finance programmer. Write ONE self-contained Python 3 script
+(runs top-to-bottom in Google Colab with only pip installs at the top) that does the following,
+and prints DONE at the end.
+
+DATA
+1. Download MONTHLY ADJUSTED CLOSE prices from Yahoo Finance (yfinance) for these 10 ETFs:
+   SPY, IWM, VEA, VWO, XLE, QQQ, AGG, TIP, HYG, GLD.
+   Download daily data from 2020-11-20 to 2026-01-10 with auto_adjust=False, take the "Adj Close"
+   column, and resample to month-end using the LAST available trading day of each month.
+   Keep month-ends from 2020-12-31 to 2024-12-31.
+2. Download the Fama-French monthly factors from
+   https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/F-F_Research_Data_Factors_CSV.zip
+   Use the monthly table only (rows whose first field is a 6-digit YYYYMM). Take the RF column,
+   which is in PERCENT, divide by 100, and index by month-end.
+3. Compute simple monthly returns = P_t / P_(t-1) - 1 (exactly 48 observations, Jan 2021 to Dec 2024; assert that).
+
+STATISTICS
+- Annualised return = arithmetic mean of monthly returns x 12.
+- Annualised standard deviation = sample standard deviation (ddof=1) x sqrt(12).
+- Annualised risk-free rate = mean of the 48 monthly RF values x 12.
+- Annualised covariance matrix = sample covariance (ddof=1) x 12.
+
+PORTFOLIOS (scipy.optimize.minimize, SLSQP, bounds 0..1, weights sum to 1, NO short selling,
+at least 10 starting points, keep the best)
+- MVP: minimise variance.
+- ORP: maximise Sharpe ratio (ret - rf) / sd. It must hold at least 2 ETFs with weight > 0.0001,
+  otherwise raise an error saying to choose other ETFs.
+- OCP with risk aversion A = 7: y = (E[r_ORP] - rf) / (A x variance_ORP); OCP return = rf + y x (E[r_ORP] - rf);
+  OCP sd = y x sd_ORP (y may exceed 1, meaning borrowing at rf).
+
+MINIMUM VARIANCE FRONTIER
+- 80 target returns equally spaced from the lowest to the highest annualised ETF return.
+- For each target, minimise portfolio variance subject to: weights sum to 1, each weight between 0 and 1
+  (no short selling), portfolio return equals the target. Use the same multi-start approach.
+- Record target return, sd and the 10 weights for every point.
+
+CHART (matplotlib)
+- x axis: annualised standard deviation (percent); y axis: annualised return (percent).
+- Plot the frontier as a line; the 10 individual ETFs as small grey dots, each labelled with its ticker;
+  MVP, ORP and OCP as large, clearly different markers, each labelled with its name and (sd, return);
+  the Capital Allocation Line as a dashed line from (0, rf) through the ORP, extended to a standard deviation
+  of 1.7 x the ORP's (the OCP must lie on this line).
+- Add a title, axis labels, a legend and light gridlines. Save as mvf_ai.png at 200 dpi.
+
+EXCEL
+- Write ai_mvf.xlsx (openpyxl) with ONE worksheet named "MVF" containing: (a) a table of the 80 frontier points
+  (target return, sd, weights), (b) a table with the weights, return, sd and Sharpe of MVP, ORP and OCP,
+  and (c) the chart, inserted as an image (openpyxl.drawing.image.Image of mvf_ai.png) at cell N2.
+- Also save results.json: {"mvp": {"weights": {...}, "ret": x, "sd": x}, "orp": {...}, "ocp": {...}}
+  with annualised decimals (0.10 = 10%).
+Return only the code in one block.
